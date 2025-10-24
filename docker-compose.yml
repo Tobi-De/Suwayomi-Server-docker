@@ -1,8 +1,9 @@
 ---
 services:
   suwayomi:
-    image: ghcr.io/suwayomi/suwayomi-server:preview
     # user: 1000:1000
+    image: ghcr.io/suwayomi/suwayomi-server:preview
+    container_name: suwayomi
     environment:
       - TZ=Etc/UTC # Use TZ database name from https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
       # Comment these out if you do not use the flaresolverr container at the bottom of this file
@@ -28,6 +29,7 @@ services:
 #      - EXTENSION_REPOS=["http://github.com/orginazation-name/repo-name", "http://github.com/orginazation-name-2/repo-name-2"]
     volumes:
       - ./data:/home/suwayomi/.local/share/Tachidesk
+      - /home/tobi/manga:/home/suwayomi/.local/share/Tachidesk/downloads/mangas
     ports:
       - "4567:4567"
     restart: on-failure:3
