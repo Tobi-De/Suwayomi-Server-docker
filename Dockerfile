@@ -1,13 +1,13 @@
-FROM eclipse-temurin:21.0.8_9-jdk-noble AS build
+FROM eclipse-temurin:25.0.3_9-jdk-noble AS build
 
 ARG TACHIDESK_ABORT_HANDLER_DOWNLOAD_URL
 
 # build abort handler
 RUN if [ -n "$TACHIDESK_ABORT_HANDLER_DOWNLOAD_URL" ]; then \
+      apt-get update && \
+      apt-get -y install -y curl gcc && \
       cd /tmp && \
       curl "$TACHIDESK_ABORT_HANDLER_DOWNLOAD_URL" -O && \
-      apt-get update && \
-      apt-get -y install gcc && \
       gcc -fPIC -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -shared catch_abort.c -lpthread -o /opt/catch_abort.so && \
       rm -f catch_abort.c && \
       apt-get -y purge gcc --auto-remove && \
@@ -15,7 +15,7 @@ RUN if [ -n "$TACHIDESK_ABORT_HANDLER_DOWNLOAD_URL" ]; then \
       rm -rf /var/lib/apt/lists/* || exit 1; \
     fi
 
-FROM eclipse-temurin:21.0.8_9-jre-noble
+FROM eclipse-temurin:25.0.3_9-jre-noble
 
 ARG TARGETPLATFORM
 ARG TACHIDESK_KCEF=y # y or n, leave empty for auto-detection
@@ -25,7 +25,7 @@ ARG TACHIDESK_KCEF_RELEASE_URL
 # install unzip to unzip the server-reference.conf from the jar
 # Install tini for a tiny init system (handles orphan processes for graceful restart)
 RUN apt-get update && \
-    apt-get -y install -y gettext-base unzip tini ca-certificates p11-kit && \
+    apt-get -y install -y curl gettext-base unzip tini ca-certificates p11-kit && \
     /usr/bin/p11-kit extract --format=java-cacerts --filter=certificates --overwrite --purpose server-auth $JAVA_HOME/lib/security/cacerts && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -37,7 +37,7 @@ RUN if [ "$TACHIDESK_KCEF" = "y" ] || ([ "$TACHIDESK_KCEF" = "" ] && ([ "$TARGET
       apt-get update && \
       apt-get -y install --no-install-recommends -y libxss1 libxext6 libxrender1 libxcomposite1 libxdamage1 libxkbcommon0 libxtst6 \
           libjogl2-jni libgluegen2-jni libglib2.0-0t64 libnss3 libdbus-1-3 libpango-1.0-0 libcairo2 libasound2t64 \
-          libatk-bridge2.0-0t64 libcups2t64 libdrm2 libgbm1 xvfb \
+          libatk-bridge2.0-0t64 libcups2t64 libdrm2 libgbm1 libegl1 xvfb \
           curl jq gawk findutils && \
       /root/kcef_download.sh "$TACHIDESK_KCEF_RELEASE_URL" "$TARGETPLATFORM" && \
       apt-get clean && \
